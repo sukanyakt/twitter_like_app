@@ -1,10 +1,9 @@
 class SessionsController < Devise::SessionsController
   
+  before_action :authenticate_user!
+  before_action :authorize_user, except: :create
   before_action :sign_in_params, only: :create
   before_action :load_user, only: [:create]
-
-  before_action :authenticate_user!, except: :create
-  # before_action :authorize_user, only: :logout
 
   # sign in
   def create
@@ -16,23 +15,13 @@ class SessionsController < Devise::SessionsController
       }, status: :ok
     else
       render json: {
-        messages: "Signed In Failed - Unauthorized",
+        messages: "Username/Password incorrect",
         is_success: false,
         data: {}
       }, status: :unauthorized
     end
   end
 
-  def authorize_user
-    auth_token = request.headers['Authorization'].split(' ').last if request.headers['Authorization'].present?
-    unless auth_token.present?
-      render json: { status: 'error', message: 'not_authorized' }, status: :unauthorized
-    else 
-      @current_user = User.find_by(authentication_token: auth_token)  
-    end
-  end  
-
-  
   private
 
   def sign_in_params
